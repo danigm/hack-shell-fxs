@@ -1,10 +1,11 @@
 /*
- * shell-code-view-effect.c
+ * hackfx-code-view-effect.c
  *
  * Based on clutter-desaturate-effect.c.
  *
  * Copyright (C) 2010  Intel Corporation.
  * Copyright (C) 2018  Endless Mobile, Inc.
+ * Copyright (C) 2020  Endless OS LLC.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,11 +23,12 @@
  * Authors:
  *   Emmanuele Bassi <ebassi@linux.intel.com>
  *   Cosimo Cecchi <cosimo@endlessm.com>
+ *   Daniel Garcia Moreno <daniel@endlessm.com>
  */
 
 #include <math.h>
 
-#include "shell-code-view-effect.h"
+#include "hackfx-code-view-effect.h"
 
 #include <cogl/cogl.h>
 
@@ -42,9 +44,9 @@ typedef struct
   gint gradient_points_uniform;
 
   CoglPipeline *pipeline;
-} ShellCodeViewEffectPrivate;
+} HackfxCodeViewEffectPrivate;
 
-struct _ShellCodeViewEffectClass
+struct _HackfxCodeViewEffectClass
 {
   ClutterOffscreenEffectClass parent_class;
 
@@ -94,16 +96,16 @@ static const gchar *glsl_source =
   "  cogl_color_out.rgba = gradient_map (cogl_color_out.rgba);";
 
 
-G_DEFINE_TYPE_WITH_PRIVATE (ShellCodeViewEffect,
-                            shell_code_view_effect,
+G_DEFINE_TYPE_WITH_PRIVATE (HackfxCodeViewEffect,
+                            hackfx_code_view_effect,
                             CLUTTER_TYPE_OFFSCREEN_EFFECT)
 
 static gboolean
-shell_code_view_effect_pre_paint (ClutterEffect       *effect,
+hackfx_code_view_effect_pre_paint (ClutterEffect       *effect,
                                   ClutterPaintContext *paint_context)
 {
-  ShellCodeViewEffect *self = SHELL_CODE_VIEW_EFFECT (effect);
-  ShellCodeViewEffectPrivate *priv = shell_code_view_effect_get_instance_private (self);
+  HackfxCodeViewEffect *self = HACKFX_CODE_VIEW_EFFECT (effect);
+  HackfxCodeViewEffectPrivate *priv = hackfx_code_view_effect_get_instance_private (self);
   ClutterEffectClass *parent_class;
 
   if (!clutter_actor_meta_get_enabled (CLUTTER_ACTOR_META (effect)))
@@ -121,7 +123,7 @@ shell_code_view_effect_pre_paint (ClutterEffect       *effect,
       return FALSE;
     }
 
-  parent_class = CLUTTER_EFFECT_CLASS (shell_code_view_effect_parent_class);
+  parent_class = CLUTTER_EFFECT_CLASS (hackfx_code_view_effect_parent_class);
   if (parent_class->pre_paint (effect, paint_context))
     {
       ClutterOffscreenEffect *offscreen_effect = CLUTTER_OFFSCREEN_EFFECT (effect);
@@ -137,11 +139,11 @@ shell_code_view_effect_pre_paint (ClutterEffect       *effect,
 }
 
 static void
-shell_code_view_effect_paint_target (ClutterOffscreenEffect *effect,
+hackfx_code_view_effect_paint_target (ClutterOffscreenEffect *effect,
                                      ClutterPaintContext    *paint_context)
 {
-  ShellCodeViewEffect *self = SHELL_CODE_VIEW_EFFECT (effect);
-  ShellCodeViewEffectPrivate *priv = shell_code_view_effect_get_instance_private (self);
+  HackfxCodeViewEffect *self = HACKFX_CODE_VIEW_EFFECT (effect);
+  HackfxCodeViewEffectPrivate *priv = hackfx_code_view_effect_get_instance_private (self);
   CoglFramebuffer *fb;
   ClutterActor *actor;
   CoglHandle texture;
@@ -166,20 +168,20 @@ shell_code_view_effect_paint_target (ClutterOffscreenEffect *effect,
 }
 
 static void
-shell_code_view_effect_dispose (GObject *gobject)
+hackfx_code_view_effect_dispose (GObject *gobject)
 {
-  ShellCodeViewEffect *self = SHELL_CODE_VIEW_EFFECT (gobject);
-  ShellCodeViewEffectPrivate *priv = shell_code_view_effect_get_instance_private (self);
+  HackfxCodeViewEffect *self = HACKFX_CODE_VIEW_EFFECT (gobject);
+  HackfxCodeViewEffectPrivate *priv = hackfx_code_view_effect_get_instance_private (self);
 
   g_clear_pointer (&priv->pipeline, cogl_object_unref);
 
-  G_OBJECT_CLASS (shell_code_view_effect_parent_class)->dispose (gobject);
+  G_OBJECT_CLASS (hackfx_code_view_effect_parent_class)->dispose (gobject);
 }
 
 static void
-update_gradient_uniforms (ShellCodeViewEffect *self)
+update_gradient_uniforms (HackfxCodeViewEffect *self)
 {
-  ShellCodeViewEffectPrivate *priv = shell_code_view_effect_get_instance_private (self);
+  HackfxCodeViewEffectPrivate *priv = hackfx_code_view_effect_get_instance_private (self);
 
   if (!(priv->gradient_points_uniform > -1) || !(priv->gradient_colors_uniform > -1))
     return;
@@ -208,25 +210,25 @@ update_gradient_uniforms (ShellCodeViewEffect *self)
 }
 
 static void
-shell_code_view_effect_class_init (ShellCodeViewEffectClass *klass)
+hackfx_code_view_effect_class_init (HackfxCodeViewEffectClass *klass)
 {
   ClutterEffectClass *effect_class = CLUTTER_EFFECT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   ClutterOffscreenEffectClass *offscreen_class;
 
   offscreen_class = CLUTTER_OFFSCREEN_EFFECT_CLASS (klass);
-  offscreen_class->paint_target = shell_code_view_effect_paint_target;
+  offscreen_class->paint_target = hackfx_code_view_effect_paint_target;
 
-  effect_class->pre_paint = shell_code_view_effect_pre_paint;
+  effect_class->pre_paint = hackfx_code_view_effect_pre_paint;
 
-  gobject_class->dispose = shell_code_view_effect_dispose;
+  gobject_class->dispose = hackfx_code_view_effect_dispose;
 }
 
 static void
-shell_code_view_effect_init (ShellCodeViewEffect *self)
+hackfx_code_view_effect_init (HackfxCodeViewEffect *self)
 {
-  ShellCodeViewEffectClass *klass = SHELL_CODE_VIEW_EFFECT_GET_CLASS (self);
-  ShellCodeViewEffectPrivate *priv = shell_code_view_effect_get_instance_private (self);
+  HackfxCodeViewEffectClass *klass = HACKFX_CODE_VIEW_EFFECT_GET_CLASS (self);
+  HackfxCodeViewEffectPrivate *priv = hackfx_code_view_effect_get_instance_private (self);
 
   if (G_UNLIKELY (klass->base_pipeline == NULL))
     {
@@ -256,8 +258,8 @@ shell_code_view_effect_init (ShellCodeViewEffect *self)
 }
 
 /**
- * shell_code_view_effect_set_gradient_stops:
- * @effect: a #ShellCodeViewEffect
+ * hackfx_code_view_effect_set_gradient_stops:
+ * @effect: a #HackfxCodeViewEffect
  * @gradient_colors: (array length=gradient_len) (element-type utf8): gradient colors
  * @gradient_points: (array length=gradient_len) (element-type gfloat): gradient points
  * @gradient_len: length of gradient stops
@@ -265,12 +267,12 @@ shell_code_view_effect_init (ShellCodeViewEffect *self)
  * Set the gradient colors and stop points for this effect.
  */
 void
-shell_code_view_effect_set_gradient_stops (ShellCodeViewEffect *effect,
+hackfx_code_view_effect_set_gradient_stops (HackfxCodeViewEffect *effect,
                                            gchar **gradient_colors,
                                            gfloat *gradient_points,
                                            gsize gradient_len)
 {
-  ShellCodeViewEffectPrivate *priv = shell_code_view_effect_get_instance_private (effect);
+  HackfxCodeViewEffectPrivate *priv = hackfx_code_view_effect_get_instance_private (effect);
   gint i;
 
   g_return_if_fail (gradient_colors != NULL);
@@ -285,15 +287,15 @@ shell_code_view_effect_set_gradient_stops (ShellCodeViewEffect *effect,
 }
 
 /**
- * shell_code_view_effect_new:
+ * hackfx_code_view_effect_new:
  *
- * Creates a new #ShellCodeViewEffect to be used with
+ * Creates a new #HackfxCodeViewEffect to be used with
  * clutter_actor_add_effect()
  *
- * Return value: the newly created #ShellCodeViewEffect or %NULL
+ * Return value: the newly created #HackfxCodeViewEffect or %NULL
  */
 ClutterEffect *
-shell_code_view_effect_new (void)
+hackfx_code_view_effect_new (void)
 {
-  return g_object_new (SHELL_TYPE_CODE_VIEW_EFFECT, NULL);
+  return g_object_new (HACKFX_TYPE_CODE_VIEW_EFFECT, NULL);
 }
